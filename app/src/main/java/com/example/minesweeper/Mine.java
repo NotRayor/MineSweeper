@@ -75,7 +75,9 @@ public class Mine extends ImageButton {
         //setOnClickListener(lis);
     }
     public void checkMine(int x, int y) {
-
+        if(x < 0 || y < 0 || x >= row || y >= col){
+            return;
+        }
 
     }
 
@@ -131,6 +133,8 @@ public class Mine extends ImageButton {
     // init
     public void initImage(){
         Log.e("InitImage", "nearMine" + nearMine);
+        this.isVisible = true;
+
         if (isMine) {
             // 지뢰를 골랐다.
             setImageResource(R.drawable.mine);

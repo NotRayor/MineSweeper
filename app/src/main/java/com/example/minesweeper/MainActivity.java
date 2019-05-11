@@ -14,8 +14,6 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    static final int BOARD_WIDTH_SMALL = 512;
-    static final int BOARD_HEIGHT_SMALL = 512;
     static final int CELL_SIZE_SMALL = 60;
     static final int CELL_SIZE_MIDIUM = 70;
     static final int CELL_SIZE_LARGE = 100;
@@ -30,9 +28,6 @@ public class MainActivity extends AppCompatActivity {
     static int cols, rows;
     int mineNum = 0;
     int cellSize;
-
-    int sRows = 0;
-    int sCols = 0;
 
 
     @Override
@@ -82,9 +77,9 @@ public class MainActivity extends AppCompatActivity {
                 btnArray[i][j].setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Log.e("onClick", "onClick Initiate");
                         Mine block = (Mine) v;
                         searchMine(block.row, block.col);
-                        block.initImage();
                         Log.e("onClick", block.row + "," + block.col);
                     }
                 });
@@ -125,56 +120,63 @@ public class MainActivity extends AppCompatActivity {
         Log.e("mineNum", String.format("mineNum : %d \n", mineNum));
     }
 
-    // 클릭 시, 연속되어 배치된 빈타일, 지뢰인접타일들을 모두 밝힌다.
-    // 어떻게 밝히는가? 지뢰가 아니라면 true로, Mine이 Click 된 것처럼 만든다.
-    // 이때 연산해서, Mine에 숫자를 부여해준다. // 혹은 게임 시작시 셋팅할때 밑바탕에 숫자를 깔아둘 수도 있기는 하다..
-    // 이런 마인 찾기 작업을 여기서 처리하는 게 맞는가.. 음..
-    // 지뢰가 있으면 True로 하는 식으로 해결해보자. 그러면 그 갯수를 가지고 파악할 수 있지 않을까? 아닌가 재귀 처리면 그걸 그렇게 인식하진 못하나..
+
+    // 인접타일을 계산하고 예외.. 식으로 아까와는 좀 다르게,
+    // 반환식이 쓸데가 있나?? 주위를 다시 둘러보는 경우에 true로 하자
     public boolean searchMine(int x, int y) {
+        Log.e("saerchMine start", "start" + x +", " + y);
 
-        Log.e("searchMine", "x:" + x + ", " + "y:" + y);
-
-        // 이게.. 음..
-        if (x < 0 || y < 0 || x >= rows || y >= cols) {
-            Log.e("searchMine", "initiate" + rows + ", " + cols);
+        if (btnArray[x][y].isMine) {
+            Log.e("searchMine", "Mine Selected");
+            btnArray[x][y].initImage();
             return false;
-        }
-        // 지뢰라면 동작 끝
-        else if (btnArray[x][y].isMine) {
-            Log.e("searchMine", "initiate2");
-            return true;
-        }
-        // 이미 방문한 타일이라면 동작 끝
-        else if (btnArray[x][y].isVisible){
+        } else if (btnArray[x][y].isVisible) {
+            Log.e("searchMine", "Visit Block");
             return false;
-        }
-        // 이제 연산을 하자
-        else {
-            Log.e("searchMine", "initiate3");
-            btnArray[x][y].isVisible = true;
+        } else {
+            for (int sRow = x - 1; sRow <= x + 1; sRow++) {
+                for (int sCol = y - 1; sCol <= y + 1; sCol++) {
 
-            for (int i = x - 1; i <= x + 1; i++) {
-                for (int j = y - 1; j <= y + 1; j++) {
-
-                    if ((x == i && y == j) || i < 0 || j < 0 || i >= rows || j >= cols ){
+                    if (sRow == x && sCol == y) {
                         continue;
                     }
-                    if(searchMine(i,j)) {
+                    if (sRow < 0 || sCol < 0 || sRow >= rows || sCol >= cols) {
+                        continue;
+                    }
+
+                    Log.e("searchMine", "UnKnown Block " + sRow + ", " + sCol);
+                    if (btnArray[sRow][sCol].isMine) {
                         btnArray[x][y].nearMine++;
-                        Log.e("nearMine Find", "x = " + x + ", " + y + " nearMine " + btnArray[x][y].nearMine);
+                    }
+                }
+            }
+            Log.e("btnArray", x + "," + y + ", nearMine : " + btnArray[x][y].nearMine);
+
+            if (btnArray[x][y].nearMine != 0) {
+                btnArray[x][y].initImage();
+            } else {
+                Log.e("searchMine", "searchMine recursive enter");
+                btnArray[x][y].initImage();
+                for (int sRow = x - 1; sRow <= x + 1; sRow++) {
+                    for (int sCol = y - 1; sCol <= y + 1; sCol++) {
+                        Log.e("searchMine", "calc... "  + sRow + ", " + sCol + " x : " + x + " y : " + y + "cols " + cols + "rows " + rows);
+                        if (sRow == x && sCol == y) {
+                            continue;
+                        }
+                        if (sRow < 0 || sCol < 0 || sRow >= rows || sCol >= cols) {
+                            continue;
+                        }
+
+                        Log.e("searchMine", "searchMine recursive");
+                        searchMine(sRow, sCol);
                     }
                 }
             }
 
-            Log.e("nearMine", String.format("%s", btnArray[x][y].nearMine));
-
-            // 지뢰가 아니라면 세팅! 아니면 엥??
-            if (!btnArray[x][y].isMine) {
-                btnArray[x][y].initImage();
-            }
-
             return false;
+
         }
+
 
     }
 
