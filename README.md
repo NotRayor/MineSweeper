@@ -1,6 +1,10 @@
 # MineSweeper
 MineSweeper
 
+![funny](./img/funny.png)
+---
+
+
 2019-05-11
 클릭 시 연속된 빈 블록 + 지뢰 인접 블록들 오픈하는 알고리즘 <br>
 화면 크기에맞는 셀 배치 구현 <br>
