@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import java.util.Random;
 
@@ -124,11 +125,13 @@ public class MainActivity extends AppCompatActivity {
     // 인접타일을 계산하고 예외.. 식으로 아까와는 좀 다르게,
     // 반환식이 쓸데가 있나?? 주위를 다시 둘러보는 경우에 true로 하자
     public boolean searchMine(int x, int y) {
-        Log.e("saerchMine start", "start" + x +", " + y);
+        Log.e("saerchMine start", "start" + x + ", " + y);
 
         if (btnArray[x][y].isMine) {
             Log.e("searchMine", "Mine Selected");
             btnArray[x][y].initImage();
+            Toast.makeText(getApplicationContext(), "패배! 지뢰를 선택했습니다.", Toast.LENGTH_LONG).show();
+            gameFail();
             return false;
         } else if (btnArray[x][y].isVisible) {
             Log.e("searchMine", "Visit Block");
@@ -155,11 +158,11 @@ public class MainActivity extends AppCompatActivity {
             if (btnArray[x][y].nearMine != 0) {
                 btnArray[x][y].initImage();
             } else {
-                Log.e("searchMine", "searchMine recursive enter");
                 btnArray[x][y].initImage();
+                Log.e("searchMine", "searchMine recursive enter");
                 for (int sRow = x - 1; sRow <= x + 1; sRow++) {
                     for (int sCol = y - 1; sCol <= y + 1; sCol++) {
-                        Log.e("searchMine", "calc... "  + sRow + ", " + sCol + " x : " + x + " y : " + y + "cols " + cols + "rows " + rows);
+                        Log.e("searchMine", "calc... " + sRow + ", " + sCol + " x : " + x + " y : " + y + "cols " + cols + "rows " + rows);
                         if (sRow == x && sCol == y) {
                             continue;
                         }
@@ -178,6 +181,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+    }
+
+
+    protected boolean gameFail() {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                btnArray[i][j].isVisible = true;
+                if (btnArray[i][j].isMine) {
+                    btnArray[i][j].initImage();
+                }
+            }
+
+        }
+        return true;
     }
 
 
