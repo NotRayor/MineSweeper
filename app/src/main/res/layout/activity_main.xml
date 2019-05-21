@@ -9,6 +9,32 @@
     >
 
     <!--Game implements-->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/mineCount"
+            android:layout_width="126dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="left"
+            android:clickable = "false"
+            android:textSize = "20dp"
+            android:text="0" />
+
+        <Button
+            android:id="@+id/gameTimer"
+            android:layout_width="126dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right"
+            android:clickable = "false"
+            android:textSize = "20dp"
+            android:text="0" />
+
+    </FrameLayout>
+
     <LinearLayout
         android:id="@+id/game_board"
         android:layout_width="match_parent"
@@ -37,32 +63,32 @@
 
     <!--메뉴 구현부-->
     <LinearLayout
-        android:id = "@+id/myMenu"
+        android:id="@+id/myMenu"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_weight="0.7"
         android:gravity="bottom"
-        android:layout_weight="1"
         android:orientation="horizontal">
 
 
         <Button
             android:id="@+id/startButton"
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="40dp"
             android:layout_weight="1"
             android:text="시작" />
 
         <Button
             android:id="@+id/button2"
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="40dp"
             android:layout_weight="1"
             android:text="Button" />
 
         <Button
             android:id="@+id/button3"
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="40dp"
             android:layout_weight="1"
             android:text="Button" />
 
