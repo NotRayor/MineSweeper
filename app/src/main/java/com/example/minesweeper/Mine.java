@@ -1,11 +1,12 @@
 package com.example.minesweeper;
 
 import android.content.Context;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-
+import android.widget.Toast;
 /*
  * Mine 클래스
  * 각 타일들에 대한 정보들을 담고 있는 객체다.
@@ -13,34 +14,20 @@ import android.widget.ImageView;
  */
 
 public class Mine extends ImageButton {
+    Context context;
     int cellSize;
     int row, col; // row 행, col 열
     int nearMine = 0;
 
     boolean isMine = false;
     boolean isVisible = false;
-    MineListener lis;
+    boolean isFlag = false;
 
-    public class MineListener {
-        /*
-        @Override
-        public void onClick(View v) {
-
-            Log.e("myMine", isMine + "");
-
-            if (isMine) {
-                // 게임 패배 구현부
-
-            }
-            else{
-
-            }
-        }
-        */
-    }
+    private Vibrator vibrator;
 
     public Mine(Context context) {
         super(context);
+        this.context = context;
 
         cellSize = MainActivity.getCellSize();
         setImageResource(R.drawable.cell);
@@ -57,6 +44,7 @@ public class Mine extends ImageButton {
     }
     public Mine(Context context, int x, int y) {
         super(context);
+        this.context = context;
 
         cellSize = MainActivity.getCellSize();
         setImageResource(R.drawable.cell);
@@ -71,66 +59,34 @@ public class Mine extends ImageButton {
         row = x;
         col = y;
 
-        //lis = new MineListener();
-        //setOnClickListener(lis);
     }
     public void checkMine(int x, int y) {
-
+        if(x < 0 || y < 0 || x >= row || y >= col){
+            return;
+        }
 
     }
 
 
-/*
-    public boolean searchMine(int x, int y) {
-
-        // 이게.. 음..
-        if (x < 0 || y < 0 || x > rows || y > cols) {
-            return false;
+    public void setFlagImage(){
+        if(isFlag){
+            setImageResource(R.drawable.flag);
         }
-        // 이미 밝혀진 타일이면 false, 수행 안함
-        else if (btnArray[x][y].isVisible) {
-            return false;
+        else{
+            setImageResource(R.drawable.cell);
         }
-        // 이제 연산을 하자
-        else {
-            // 각 8번의 재귀함수 속에서... 체크해서 값 추가해야함, 근데 재귀에서 계속 올라오면 결국은 죄다 true 아니겠는가?
-            // 주위 8개 체크하는 건 다른 함수로 체크하자?  아닌데..
-
-            for (int i = x - 1; i <= x + 1; i++) {
-                for (int j = y - 1; j <= y + 1; j++) {
-
-                    if (x == i && y == j) {
-                        continue;
-                    }
-
-                    if (btnArray[i][j].isMine) {
-                        btnArray[x][y].nearMine++;
-                    }
-                }
-            }
-
-            if (!btnArray[x][y].isMine){
-                btnArray[x][y].initImage();
-                searchMine(x - 1, y + 1);
-                searchMine(x, y + 1);
-                searchMine(x + 1, y + 1);
-                searchMine(x + 1, y);
-                searchMine(x + 1, y - 1);
-                searchMine(x, y - 1);
-                searchMine(x - 1, y - 1);
-                searchMine(x - 1, y);
-
-                return true;
-            }
-
-            return false;
-        }
-
-    }*/
+    }
 
     // init
     public void initImage(){
+        if(isFlag){
+            setImageResource(R.drawable.flag);
+            return;
+        }
+
         Log.e("InitImage", "nearMine" + nearMine);
+        this.isVisible = true;
+
         if (isMine) {
             // 지뢰를 골랐다.
             setImageResource(R.drawable.mine);
@@ -154,6 +110,43 @@ public class Mine extends ImageButton {
         }
     }
 
+    // 반환 값이 지뢰 카운트의 값에 더해진다.
+    public int calcFlag(boolean isFull) {
+        int cnt = 0;
+        Toast.makeText(context, "깃발깃발", Toast.LENGTH_LONG).show();
+        MyMethod my = new MyMethod(context);
+        my.Vibrate(100);
+
+        if(isFull){
+            Toast.makeText(context, "깃발이 가득 찼습니다.", Toast.LENGTH_LONG).show();
+            return cnt;
+        }
+
+
+        if(isFlag){
+            isFlag = false;
+            cnt = 1;
+        }
+        else{
+            isFlag = true;
+            cnt = -1;
+        }
+        setFlagImage();
+
+        return cnt;
+    }
+
+    public boolean isMineClear(){
+        if(isMine && isFlag){
+            return true;
+        }
+        else if(!isMine && !isFlag){
+            return true;
+        }
+        // 마인제거 실패,
+        return false;
+    }
+
     // set, get 메소드 구현부
     public void setImage(int id){
         this.setImageResource(id);
@@ -166,6 +159,31 @@ public class Mine extends ImageButton {
         this.isMine = isMine;
     }
 
+    public int getCellSize() {
+        return cellSize;
+    }
 
+    public int getRow() {
+        return row;
+    }
 
+    public int getCol() {
+        return col;
+    }
+
+    public int getNearMine() {
+        return nearMine;
+    }
+
+    public boolean isMine() {
+        return isMine;
+    }
+
+    public boolean isVisible() {
+        return isVisible;
+    }
+
+    public boolean isFlag() {
+        return isFlag;
+    }
 }

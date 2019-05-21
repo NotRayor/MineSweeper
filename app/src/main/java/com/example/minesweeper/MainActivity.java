@@ -1,7 +1,9 @@
 package com.example.minesweeper;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,30 +11,35 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
-    static final int BOARD_WIDTH_SMALL = 512;
-    static final int BOARD_HEIGHT_SMALL = 512;
+    // 환경설정 값 
     static final int CELL_SIZE_SMALL = 60;
-    static final int CELL_SIZE_MIDIUM = 70;
+    static final int CELL_SIZE_MIDIUM = 80;
     static final int CELL_SIZE_LARGE = 100;
+    static int counter = 0;
 
 
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT);
     LinearLayout gameBoard;
+    Button mineCount;
+    Button gameTimer;
     Button btn1;
     Mine btnArray[][];
+    Thread timerThread;
+
 
     static int cols, rows;
     int mineNum = 0;
+    int sMineNum = 0;
     int cellSize;
-
-    int sRows = 0;
-    int sCols = 0;
 
 
     @Override
@@ -50,19 +57,52 @@ public class MainActivity extends AppCompatActivity {
                 makeGame();
             }
         });
+        mineCount = (Button) findViewById(R.id.mineCount);
+        gameTimer = (Button) findViewById(R.id.gameTimer);
+
+
 
     }
 
     // 게임판 초기화
     public void initGame() {
-        gameBoard.removeAllViews();
+        // 타이머 쓰레드가 실행되고 있다면, 타이머 초기화하고 다시 시작,
+        if (timerThread != null) {
+            timerThread.interrupt();
+            counter = 0;
+        }
+        timerThread = new Thread() {
+            @Override
+            public void run() {
+                // interrupt() 발생 시, InterruptedException을 발생시킨다.
 
+                Log.e("Counter = ", counter + "");
+                try {
+                    while (!Thread.currentThread().isInterrupted()) {
+                        counter++;
+                        gameTimer.setText(String.format("%d", counter));
+                        Thread.sleep(1000);
+                    }
+                } catch (Exception e) {
+                    Log.e("Timer Thread Error", "");
+                } finally {
+                    Log.e("Thread Dead", this.getName() + " " + Thread.currentThread().isInterrupted());
+                }
+            }
+        };
+        timerThread.start();
+
+        // gameBoard 모든 뷰 청소,
+        gameBoard.removeAllViews();
     }
 
     // 게임판 만들기 ( 지뢰 갯수, 타일 갯수 판단 )
     public void makeGame() {
         initGame();
 
+        Random rand = new Random();
+        int nMineNum = 0;
+        double mineRatio = 0;
         int width = gameBoard.getWidth();
         int height = gameBoard.getHeight();
 
@@ -71,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
         btnArray = new Mine[rows][cols]; // 행열 크기의 버튼을 생성!
 
-        // 셀을 정했는데 그럼 버튼들 배치는 어떻게??
+        // 게임판 내부 셀 배치
         for (int i = 0; i < rows; i++) {
             LinearLayout myLayout = new LinearLayout(this);
             myLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -83,29 +123,37 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         Mine block = (Mine) v;
-                        searchMine(block.row, block.col);
-                        block.initImage();
-                        Log.e("onClick", block.row + "," + block.col);
+                        // 깃발이 안 꽂혔다면, 연산 실행
+                        if (!block.isFlag) {
+                            searchMine(block.row, block.col);
+                        }
                     }
                 });
-
+                btnArray[i][j].setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        Mine block = (Mine) v;
+                        // 전체 추정 지뢰 갯수를 반환 값을 통해 조정,
+                        sMineNum += block.calcFlag(sMineNum == 0);
+                        mineCount.setText(String.format("%d", sMineNum));
+                        // 게임이 끝났는 지 확인,
+                        gameEnd();
+                        return true;
+                    }
+                });
                 myLayout.addView(btnArray[i][j], params);
             }
         }
-
-
-        double mineRatio = 0;
 
         // 난이도에 따른 지뢰 설정
         if (true) {
             mineRatio = 0.15;
             mineNum = (int) (rows * cols * mineRatio);
+            mineCount.setText(String.format("%d", mineNum));
+            sMineNum = mineNum;
         }
 
         // 지뢰 랜덤 설치
-        Random rand = new Random();
-        int nMineNum = 0;
-
         while (nMineNum < mineNum) {
             nMineNum++;
             int randRow = rand.nextInt(rows);
@@ -119,63 +167,105 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-
         Log.e("Width Height Values", width + "," + height);
         Log.e("Cols Rows Values", "rows = " + rows + "," + "cols = " + cols);
         Log.e("mineNum", String.format("mineNum : %d \n", mineNum));
     }
 
-    // 클릭 시, 연속되어 배치된 빈타일, 지뢰인접타일들을 모두 밝힌다.
-    // 어떻게 밝히는가? 지뢰가 아니라면 true로, Mine이 Click 된 것처럼 만든다.
-    // 이때 연산해서, Mine에 숫자를 부여해준다. // 혹은 게임 시작시 셋팅할때 밑바탕에 숫자를 깔아둘 수도 있기는 하다..
-    // 이런 마인 찾기 작업을 여기서 처리하는 게 맞는가.. 음..
-    // 지뢰가 있으면 True로 하는 식으로 해결해보자. 그러면 그 갯수를 가지고 파악할 수 있지 않을까? 아닌가 재귀 처리면 그걸 그렇게 인식하진 못하나..
+
+    // 인접타일을 계산하고 예외.. 식으로 아까와는 좀 다르게,
+    // 반환식이 쓸데가 있나?? 주위를 다시 둘러보는 경우에 true로 하자
     public boolean searchMine(int x, int y) {
-
-        Log.e("searchMine", "x:" + x + ", " + "y:" + y);
-
-        // 이게.. 음..
-        if (x < 0 || y < 0 || x >= rows || y >= cols) {
-            Log.e("searchMine", "initiate" + rows + ", " + cols);
+        // 지뢰 선택
+        if (btnArray[x][y].isMine) {
+            btnArray[x][y].initImage();
+            Toast.makeText(getApplicationContext(), "패배! 지뢰를 선택했습니다.", Toast.LENGTH_LONG).show();
+            gameFail();
             return false;
-        }
-        // 지뢰라면 동작 끝
-        else if (btnArray[x][y].isMine) {
-            Log.e("searchMine", "initiate2");
-            return true;
-        }
-        // 이미 방문한 타일이라면 동작 끝
-        else if (btnArray[x][y].isVisible){
+            // 이미 방문한 셀
+        } else if (btnArray[x][y].isVisible) {
             return false;
-        }
-        // 이제 연산을 하자
-        else {
-            Log.e("searchMine", "initiate3");
-            btnArray[x][y].isVisible = true;
+        } else {
+            // 현재 셀 기준 주변 셀 모두 확인, 지뢰 갯수 파악
+            for (int sRow = x - 1; sRow <= x + 1; sRow++) {
+                for (int sCol = y - 1; sCol <= y + 1; sCol++) {
 
-            for (int i = x - 1; i <= x + 1; i++) {
-                for (int j = y - 1; j <= y + 1; j++) {
-
-                    if ((x == i && y == j) || i < 0 || j < 0 || i >= rows || j >= cols ){
+                    if (sRow == x && sCol == y) {
                         continue;
                     }
-                    if(searchMine(i,j)) {
+                    if (sRow < 0 || sCol < 0 || sRow >= rows || sCol >= cols) {
+                        continue;
+                    }
+                    if (btnArray[sRow][sCol].isMine) {
                         btnArray[x][y].nearMine++;
-                        Log.e("nearMine Find", "x = " + x + ", " + y + " nearMine " + btnArray[x][y].nearMine);
                     }
                 }
             }
 
-            Log.e("nearMine", String.format("%s", btnArray[x][y].nearMine));
-
-            // 지뢰가 아니라면 세팅! 아니면 엥??
-            if (!btnArray[x][y].isMine) {
+            // 주변에 지뢰가 있다.
+            if (btnArray[x][y].nearMine != 0) {
                 btnArray[x][y].initImage();
             }
-
+            // 주변에 지뢰가 없다. 주변에 셀 기준으로 다시 재귀함수 실행,
+            else {
+                btnArray[x][y].initImage();
+                Log.e("searchMine", "searchMine recursive enter");
+                for (int sRow = x - 1; sRow <= x + 1; sRow++) {
+                    for (int sCol = y - 1; sCol <= y + 1; sCol++) {
+                        // 예외사항, 자신을 선택하거나, 맵 바깥을 빠져나가면, 다음 루틴으로 넘긴다.
+                        if (sRow == x && sCol == y) {
+                            continue;
+                        }
+                        if (sRow < 0 || sCol < 0 || sRow >= rows || sCol >= cols) {
+                            continue;
+                        }
+                        searchMine(sRow, sCol);
+                    }
+                }
+            }
             return false;
         }
+    }
 
+
+    protected void gameEnd() {
+        boolean isFail = false;
+
+        if (sMineNum == 0) {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    // isMineClear, 마인제거시 true, 실패시 false, 한번이라도 false가 뜨면 if문 처리
+                    if (!btnArray[i][j].isMineClear()) {
+                        isFail = true;
+                    }
+                    // 선택되지 않은 셀이 남아있을 경우, 게임 승부 판정을 하면 안된다.
+                    if (!btnArray[i][j].isVisible() && !btnArray[i][j].isFlag()){
+                        return;
+                    }
+                }
+            }
+            if (isFail)
+                gameFail();
+            else
+                gameWin();
+        }
+
+    }
+
+    protected void gameWin() {
+        Toast.makeText(getApplication(), "승리하셨습니다. " + "걸린 시간 : " + counter, Toast.LENGTH_LONG).show();
+    }
+
+    protected void gameFail() {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                btnArray[i][j].isVisible = true;
+                if (btnArray[i][j].isMine) {
+                    btnArray[i][j].initImage();
+                }
+            }
+
+        }
     }
 
 
