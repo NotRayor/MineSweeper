@@ -1,7 +1,9 @@
 package com.example.minesweeper;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,22 +14,30 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
     static final int CELL_SIZE_SMALL = 60;
-    static final int CELL_SIZE_MIDIUM = 70;
+    static final int CELL_SIZE_MIDIUM = 80;
     static final int CELL_SIZE_LARGE = 100;
+    static int counter = 0;
 
 
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT);
     LinearLayout gameBoard;
+    Button mineCount;
+    Button gameTimer;
     Button btn1;
     Mine btnArray[][];
+    Thread timerThread;
+
 
     static int cols, rows;
     int mineNum = 0;
+    int sMineNum = 0;
     int cellSize;
 
 
@@ -46,19 +56,51 @@ public class MainActivity extends AppCompatActivity {
                 makeGame();
             }
         });
+        mineCount = (Button) findViewById(R.id.mineCount);
+        gameTimer = (Button) findViewById(R.id.gameTimer);
+
+        timerThread = new Thread() {
+            @Override
+            public void run() {
+                // interrupt() 발생 시, InterruptedException을 발생시킨다.
+
+                Log.e("Counter = ", counter + "");
+                try {
+                    while (!Thread.currentThread().isInterrupted()) {
+                        counter++;
+                        gameTimer.setText(String.format("%d", counter));
+                        Thread.sleep(1000);
+                    }
+                } catch (Exception e) {
+                    Log.e("Timer Thread Error", "");
+                } finally {
+                    Log.e("Thread Dead", this.getName() + " " + Thread.currentThread().isInterrupted());
+                }
+            }
+        };
 
     }
 
     // 게임판 초기화
     public void initGame() {
-        gameBoard.removeAllViews();
+        // 타이머 쓰레드가 실행되고 있다면, 타이머 초기화하고 다시 시작,
+        if (timerThread != null) {
+            timerThread.interrupt();
+            counter = 0;
+        }
+        timerThread.start();
 
+        // gameBoard 모든 뷰 청소,
+        gameBoard.removeAllViews();
     }
 
     // 게임판 만들기 ( 지뢰 갯수, 타일 갯수 판단 )
     public void makeGame() {
         initGame();
 
+        Random rand = new Random();
+        int nMineNum = 0;
+        double mineRatio = 0;
         int width = gameBoard.getWidth();
         int height = gameBoard.getHeight();
 
@@ -67,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
         btnArray = new Mine[rows][cols]; // 행열 크기의 버튼을 생성!
 
-        // 셀을 정했는데 그럼 버튼들 배치는 어떻게??
+        // 게임판 내부 셀 배치
         for (int i = 0; i < rows; i++) {
             LinearLayout myLayout = new LinearLayout(this);
             myLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -78,30 +120,35 @@ public class MainActivity extends AppCompatActivity {
                 btnArray[i][j].setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.e("onClick", "onClick Initiate");
                         Mine block = (Mine) v;
-                        searchMine(block.row, block.col);
-                        Log.e("onClick", block.row + "," + block.col);
+                        if (!block.isFlag) {
+                            searchMine(block.row, block.col);
+                        }
                     }
                 });
-
+                btnArray[i][j].setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        Mine block = (Mine) v;
+                        sMineNum += block.calcFlag(sMineNum == 0);
+                        mineCount.setText(String.format("%d", sMineNum));
+                        gameEnd();
+                        return true;
+                    }
+                });
                 myLayout.addView(btnArray[i][j], params);
             }
         }
-
-
-        double mineRatio = 0;
 
         // 난이도에 따른 지뢰 설정
         if (true) {
             mineRatio = 0.15;
             mineNum = (int) (rows * cols * mineRatio);
+            mineCount.setText(String.format("%d", mineNum));
+            sMineNum = mineNum;
         }
 
         // 지뢰 랜덤 설치
-        Random rand = new Random();
-        int nMineNum = 0;
-
         while (nMineNum < mineNum) {
             nMineNum++;
             int randRow = rand.nextInt(rows);
@@ -115,7 +162,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-
         Log.e("Width Height Values", width + "," + height);
         Log.e("Cols Rows Values", "rows = " + rows + "," + "cols = " + cols);
         Log.e("mineNum", String.format("mineNum : %d \n", mineNum));
@@ -125,18 +171,17 @@ public class MainActivity extends AppCompatActivity {
     // 인접타일을 계산하고 예외.. 식으로 아까와는 좀 다르게,
     // 반환식이 쓸데가 있나?? 주위를 다시 둘러보는 경우에 true로 하자
     public boolean searchMine(int x, int y) {
-        Log.e("saerchMine start", "start" + x + ", " + y);
-
+        // 지뢰 선택
         if (btnArray[x][y].isMine) {
-            Log.e("searchMine", "Mine Selected");
             btnArray[x][y].initImage();
             Toast.makeText(getApplicationContext(), "패배! 지뢰를 선택했습니다.", Toast.LENGTH_LONG).show();
             gameFail();
             return false;
+            // 이미 방문한 셀
         } else if (btnArray[x][y].isVisible) {
-            Log.e("searchMine", "Visit Block");
             return false;
         } else {
+            //
             for (int sRow = x - 1; sRow <= x + 1; sRow++) {
                 for (int sCol = y - 1; sCol <= y + 1; sCol++) {
 
@@ -146,8 +191,6 @@ public class MainActivity extends AppCompatActivity {
                     if (sRow < 0 || sCol < 0 || sRow >= rows || sCol >= cols) {
                         continue;
                     }
-
-                    Log.e("searchMine", "UnKnown Block " + sRow + ", " + sCol);
                     if (btnArray[sRow][sCol].isMine) {
                         btnArray[x][y].nearMine++;
                     }
@@ -184,7 +227,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    protected boolean gameFail() {
+    protected void gameEnd() {
+        boolean isFail = false;
+
+        if (sMineNum == 0) {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    // isMineClear, 마인제거시 true, 실패시 false, 한번이라도 false가 뜨면 if문 처리
+                    if (!btnArray[i][j].isMineClear()) {
+                        isFail = true;
+                    }
+                }
+            }
+            if (isFail)
+                gameFail();
+            else
+                gameWin();
+        }
+
+    }
+
+    protected void gameWin() {
+        Toast.makeText(getApplication(), "승리하셨습니다. " + "걸린 시간 : " + counter, Toast.LENGTH_LONG).show();
+    }
+
+    protected void gameFail() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 btnArray[i][j].isVisible = true;
@@ -194,7 +261,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
-        return true;
     }
 
 
