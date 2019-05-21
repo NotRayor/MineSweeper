@@ -19,7 +19,7 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
-    // 환경설정 값
+    // 환경설정 값 
     static final int CELL_SIZE_SMALL = 60;
     static final int CELL_SIZE_MIDIUM = 80;
     static final int CELL_SIZE_LARGE = 100;
