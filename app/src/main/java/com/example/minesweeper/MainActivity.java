@@ -59,6 +59,17 @@ public class MainActivity extends AppCompatActivity {
         mineCount = (Button) findViewById(R.id.mineCount);
         gameTimer = (Button) findViewById(R.id.gameTimer);
 
+
+
+    }
+
+    // 게임판 초기화
+    public void initGame() {
+        // 타이머 쓰레드가 실행되고 있다면, 타이머 초기화하고 다시 시작,
+        if (timerThread != null) {
+            timerThread.interrupt();
+            counter = 0;
+        }
         timerThread = new Thread() {
             @Override
             public void run() {
@@ -78,16 +89,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-
-    }
-
-    // 게임판 초기화
-    public void initGame() {
-        // 타이머 쓰레드가 실행되고 있다면, 타이머 초기화하고 다시 시작,
-        if (timerThread != null) {
-            timerThread.interrupt();
-            counter = 0;
-        }
         timerThread.start();
 
         // gameBoard 모든 뷰 청소,
@@ -121,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         Mine block = (Mine) v;
+                        // 깃발이 안 꽂혔다면, 연산 실행
                         if (!block.isFlag) {
                             searchMine(block.row, block.col);
                         }
@@ -130,8 +132,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean onLongClick(View v) {
                         Mine block = (Mine) v;
+                        // 전체 추정 지뢰 갯수를 반환 값을 통해 조정,
                         sMineNum += block.calcFlag(sMineNum == 0);
                         mineCount.setText(String.format("%d", sMineNum));
+                        // 게임이 끝났는 지 확인,
                         gameEnd();
                         return true;
                     }
@@ -181,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (btnArray[x][y].isVisible) {
             return false;
         } else {
-            //
+            // 현재 셀 기준 주변 셀 모두 확인, 지뢰 갯수 파악
             for (int sRow = x - 1; sRow <= x + 1; sRow++) {
                 for (int sCol = y - 1; sCol <= y + 1; sCol++) {
 
@@ -196,34 +200,30 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-            Log.e("btnArray", x + "," + y + ", nearMine : " + btnArray[x][y].nearMine);
 
+            // 주변에 지뢰가 있다.
             if (btnArray[x][y].nearMine != 0) {
                 btnArray[x][y].initImage();
-            } else {
+            }
+            // 주변에 지뢰가 없다. 주변에 셀 기준으로 다시 재귀함수 실행,
+            else {
                 btnArray[x][y].initImage();
                 Log.e("searchMine", "searchMine recursive enter");
                 for (int sRow = x - 1; sRow <= x + 1; sRow++) {
                     for (int sCol = y - 1; sCol <= y + 1; sCol++) {
-                        Log.e("searchMine", "calc... " + sRow + ", " + sCol + " x : " + x + " y : " + y + "cols " + cols + "rows " + rows);
+                        // 예외사항, 자신을 선택하거나, 맵 바깥을 빠져나가면, 다음 루틴으로 넘긴다.
                         if (sRow == x && sCol == y) {
                             continue;
                         }
                         if (sRow < 0 || sCol < 0 || sRow >= rows || sCol >= cols) {
                             continue;
                         }
-
-                        Log.e("searchMine", "searchMine recursive");
                         searchMine(sRow, sCol);
                     }
                 }
             }
-
             return false;
-
         }
-
-
     }
 
 
@@ -236,6 +236,10 @@ public class MainActivity extends AppCompatActivity {
                     // isMineClear, 마인제거시 true, 실패시 false, 한번이라도 false가 뜨면 if문 처리
                     if (!btnArray[i][j].isMineClear()) {
                         isFail = true;
+                    }
+                    // 선택되지 않은 셀이 남아있을 경우, 게임 승부 판정을 하면 안된다.
+                    if (!btnArray[i][j].isVisible() && !btnArray[i][j].isFlag()){
+                        return;
                     }
                 }
             }
