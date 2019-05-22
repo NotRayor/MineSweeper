@@ -29,7 +29,7 @@ public class Mine extends ImageButton {
         super(context);
         this.context = context;
 
-        cellSize = MainActivity.getCellSize();
+        this.cellSize = 100;
         setImageResource(R.drawable.cell);
         setMinimumWidth(cellSize);
         setMaxWidth(cellSize);
@@ -42,11 +42,12 @@ public class Mine extends ImageButton {
         //lis = new MineListener();
         //setOnClickListener(lis);
     }
-    public Mine(Context context, int x, int y) {
+    public Mine(Context context, int x, int y, int cellSize) {
         super(context);
         this.context = context;
 
-        cellSize = MainActivity.getCellSize();
+        this.cellSize = cellSize;
+        Log.e("Mine CellSize", cellSize + "");
         setImageResource(R.drawable.cell);
         setMinimumWidth(cellSize);
         setMaxWidth(cellSize);
@@ -113,12 +114,16 @@ public class Mine extends ImageButton {
     // 반환 값이 지뢰 카운트의 값에 더해진다.
     public int calcFlag(boolean isFull) {
         int cnt = 0;
-        Toast.makeText(context, "깃발깃발", Toast.LENGTH_LONG).show();
         MyMethod my = new MyMethod(context);
         my.Vibrate(100);
 
         if(isFull){
             Toast.makeText(context, "깃발이 가득 찼습니다.", Toast.LENGTH_LONG).show();
+            return cnt;
+        }
+
+        if(isVisible){
+            Toast.makeText(context, "이미 오픈된 셀입니다. ", Toast.LENGTH_LONG).show();
             return cnt;
         }
 
