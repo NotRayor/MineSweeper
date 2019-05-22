@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".mineDialog"
+    android:layout_width="match_parent"
+    android:layout_height="380dp"
+    android:orientation="vertical"
+    android:padding = "30dp">
+
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="셀의 크기"
+        android:gravity = "center"
+        android:padding = "30dp"/>
+
+    <RadioGroup
+        android:id = "@+id/sizeGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/sizeLowButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="작음" />
+
+        <RadioButton
+            android:id="@+id/sizeMiddleButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="중간" />
+
+        <RadioButton
+            android:id="@+id/sizeBigButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="큼" />
+
+    </RadioGroup>
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="난이도 설정"
+        android:gravity = "center"
+        android:padding = "30dp"/>
+
+    <RadioGroup
+        android:id = "@+id/difiiculyGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingBottom = "30dp">
+
+        <RadioButton
+            android:id="@+id/difficultyEasyButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="쉬움" />
+
+        <RadioButton
+            android:id="@+id/difficultyNormalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="보통" />
+
+        <RadioButton
+            android:id="@+id/difficultyHardButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="어려움" />
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/accept"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="확인" />
+
+</LinearLayout>

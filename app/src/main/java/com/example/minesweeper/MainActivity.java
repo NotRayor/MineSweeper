@@ -19,10 +19,14 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
-    // 환경설정 값 
+    // 환경설정 값
     static final int CELL_SIZE_SMALL = 60;
     static final int CELL_SIZE_MIDIUM = 80;
     static final int CELL_SIZE_LARGE = 100;
+
+    static final double DIFFICULY_EAZY = 0.15;
+    static final double DIFFICULY_NORMAL = 0.20;
+    static final double DIFFICULY_HARD = 0.30;
     static int counter = 0;
 
 
@@ -32,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     Button mineCount;
     Button gameTimer;
     Button btn1;
+    Button btnDialog;
+    Button btnPause;
     Mine btnArray[][];
     Thread timerThread;
 
@@ -40,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     int mineNum = 0;
     int sMineNum = 0;
     int cellSize;
+    double difiiculty;
 
 
     @Override
@@ -48,13 +55,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         gameBoard = (LinearLayout) findViewById(R.id.game_board);
-        cellSize = CELL_SIZE_LARGE;
+        cellSize = CELL_SIZE_SMALL;
+        difiiculty = DIFFICULY_NORMAL;
+
 
         btn1 = (Button) findViewById(R.id.startButton);
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 makeGame();
+            }
+        });
+        btnDialog = (Button)findViewById(R.id.dialogButton);
+        btnDialog.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
         mineCount = (Button) findViewById(R.id.mineCount);
@@ -106,9 +122,10 @@ public class MainActivity extends AppCompatActivity {
         int width = gameBoard.getWidth();
         int height = gameBoard.getHeight();
 
+
         rows = height / cellSize;
         cols = width / cellSize;
-
+        Log.e("makeGame", rows + "," + cols);
         btnArray = new Mine[rows][cols]; // 행열 크기의 버튼을 생성!
 
         // 게임판 내부 셀 배치
@@ -118,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
             gameBoard.addView(myLayout);
 
             for (int j = 0; j < cols; j++) {
-                btnArray[i][j] = new Mine(this, i, j);
+                btnArray[i][j] = new Mine(this, i, j, cellSize);
                 btnArray[i][j].setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -147,8 +164,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 난이도에 따른 지뢰 설정
         if (true) {
-            mineRatio = 0.15;
-            mineNum = (int) (rows * cols * mineRatio);
+            mineNum = (int) (rows * cols * difiiculty);
             mineCount.setText(String.format("%d", mineNum));
             sMineNum = mineNum;
         }
@@ -169,6 +185,7 @@ public class MainActivity extends AppCompatActivity {
 
         Log.e("Width Height Values", width + "," + height);
         Log.e("Cols Rows Values", "rows = " + rows + "," + "cols = " + cols);
+        Log.e("Cell Size", "CellSize = " + cellSize);
         Log.e("mineNum", String.format("mineNum : %d \n", mineNum));
     }
 
@@ -268,14 +285,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    protected void openDialog(){
+        mineDialog mineDialog = new mineDialog(this, cellSize, difiiculty);
+        mineDialog.setOwnerActivity(this);
+        mineDialog.show();
+    }
 
     // set, get 메소드들 구현부
 
     //get
-    static public int getCellSize() {
+     public int getCellSize() {
 
         // 추후, 환경설정의 셀 선택 값에 따라 셀의 크기를 정하도록 구현
-        return CELL_SIZE_LARGE;
+        return cellSize;
     }
 
 
