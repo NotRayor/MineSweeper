@@ -111,6 +111,46 @@ public class Mine extends ImageButton {
         }
     }
 
+    // init
+    public void setClickedImage(){
+        if(isFlag){
+            setImageResource(R.drawable.flag);
+            return;
+        }
+
+        Log.e("InitImage", "nearMine" + nearMine);
+        if(!isVisible){
+            setImageResource(R.drawable.cell);
+            return;
+        }
+
+        if (isMine) {
+            // 지뢰를 골랐다.
+            setImageResource(R.drawable.mine);
+
+        } else {
+            if (nearMine == 0) {
+                setImageResource(R.drawable.cell_0);
+            } else if (nearMine == 1) {
+                setImageResource(R.drawable.cell_1);
+            } else if (nearMine == 2) {
+                setImageResource(R.drawable.cell_2);
+            } else if (nearMine == 3) {
+                setImageResource(R.drawable.cell_3);
+            } else if (nearMine == 4) {
+                setImageResource(R.drawable.cell_4);
+            } else if (nearMine == 5) {
+                setImageResource(R.drawable.cell_5);
+            }
+
+        }
+    }
+
+    // clickImage
+    public void clickImage(){
+
+    }
+
     // 반환 값이 지뢰 카운트의 값에 더해진다.
     public int calcFlag(boolean isFull) {
         int cnt = 0;

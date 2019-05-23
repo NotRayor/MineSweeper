@@ -3,7 +3,7 @@ package com.example.minesweeper;
 import android.content.Context;
 import android.os.Vibrator;
 
-public class MyMethod extends Thread{
+public class MyMethod{
      Vibrator vib;
 
     MyMethod(Context context){
@@ -17,11 +17,4 @@ public class MyMethod extends Thread{
 
 
 
-
-
-    @Override
-    public void run() {
-
-
-    }
 }

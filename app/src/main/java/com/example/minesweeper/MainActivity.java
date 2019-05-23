@@ -1,5 +1,6 @@
 package com.example.minesweeper;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -7,6 +8,7 @@ import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -56,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
         gameBoard = (LinearLayout) findViewById(R.id.game_board);
         cellSize = CELL_SIZE_SMALL;
-        difiiculty = DIFFICULY_NORMAL;
+        difiiculty = DIFFICULY_EAZY;
 
 
         btn1 = (Button) findViewById(R.id.startButton);
@@ -70,9 +72,10 @@ public class MainActivity extends AppCompatActivity {
         btnDialog.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                openDialog();
             }
         });
+
         mineCount = (Button) findViewById(R.id.mineCount);
         gameTimer = (Button) findViewById(R.id.gameTimer);
 
@@ -113,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 게임판 만들기 ( 지뢰 갯수, 타일 갯수 판단 )
+    @SuppressLint("ClickableViewAccessibility")
     public void makeGame() {
         initGame();
 
@@ -146,6 +150,20 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
+
+                btnArray[i][j].setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        Mine image = (Mine)v;
+                        if(event.getAction() == MotionEvent.ACTION_DOWN){
+                            image.setImage(R.drawable.cell_0);
+                        }else if(event.getAction() == MotionEvent.ACTION_UP){
+                            image.setClickedImage();
+                        }
+                        return false;
+                    }
+                });
+
                 btnArray[i][j].setOnLongClickListener(new View.OnLongClickListener() {
                     @Override
                     public boolean onLongClick(View v) {
@@ -285,10 +303,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    protected void openDialog(){
+    public void openDialog(){
+        Log.e("openDialog", "Activate");
         mineDialog mineDialog = new mineDialog(this, cellSize, difiiculty);
         mineDialog.setOwnerActivity(this);
+        Log.e("mineDialog2", "Activate");
         mineDialog.show();
+    }
+
+    protected void setOption(int size, double df){
+        cellSize = size;
+        difiiculty = df;
     }
 
     // set, get 메소드들 구현부

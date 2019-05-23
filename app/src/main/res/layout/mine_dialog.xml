@@ -55,7 +55,7 @@
         android:padding = "30dp"/>
 
     <RadioGroup
-        android:id = "@+id/difiiculyGroup"
+        android:id = "@+id/difficultyGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -87,6 +87,6 @@
         android:id="@+id/accept"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="확인" />
+        android:text="확인"/>
 
 </LinearLayout>
